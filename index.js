@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 require('dotenv').config();
 const app = express();
@@ -13,7 +13,7 @@ app.use(express.json());
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.upnu39b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-console.log(uri)
+
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -25,10 +25,78 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+
+    const database = client.db('TravelDB');
+    const travelCollection = database.collection('travel');
+
+
+    //--post----
+
+    app.post('/addTouristsSport', async (req, res) => {
+      console.log(req.body)
+      const result = await travelCollection.insertOne(req.body)
+      console.log(result)
+      res.send(result)
+
+    })
+    // ---get- all data-------
+
+    app.get('/addTouristsSport', async (req, res) => {
+      const cursor = travelCollection.find()
+      const result = await cursor.toArray();
+      res.send(result)
+    })
+    //------get one data------
+    app.get('/addTouristsSport/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await travelCollection.findOne(query);
+      res.send(result);
+    })
+
+    //  -------get  email----
+
+    app.get("/myList/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const data = await travelCollection.find(query).toArray();
+      console.log(data)
+      res.send(data);
+    });
+
+    //------update --email user card-----
+
+    app.put("/update/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedMyList = req.body;
+      const myList = {
+        $set: {
+          image: updatedMyList.image,
+          touristsNam: updatedMyList.touristsNam,
+          location: updatedMyList.location,
+          travelTime: updatedMyList.travelTime,
+          season: updatedMyList.season,
+        }
+      }
+      const result = await travelCollection.updateOne(filter, myList)
+      res.send(result)
+
+    })
+
+
+    //-----delete------
+
+    app.delete('/addTouristsSport/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query ={_id: new ObjectId(id)};
+      const result = await travelCollection.deleteOne(query)
+      res.send(result)
+    })
+    
+   
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
@@ -39,9 +107,9 @@ run().catch(console.dir);
 
 
 
-app.get('/', async(req,res)=>{
-    res.send('rest travel server going')
+app.get('/', async (req, res) => {
+  res.send('rest travel server going')
 })
-app.listen(port, ()=>{
-    console.log(`rest travel is running, ${port}`)
+app.listen(port, () => {
+  console.log(`rest travel is running, ${port}`)
 })
