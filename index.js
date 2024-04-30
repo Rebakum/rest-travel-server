@@ -28,6 +28,7 @@ async function run() {
 
     const database = client.db('TravelDB');
     const travelCollection = database.collection('travel');
+    const crantryCollection =client.db('TravelDB').collection('country')
 
 
     //--post----
@@ -94,6 +95,38 @@ async function run() {
       res.send(result)
     })
     
+
+//------country data api----
+app.post('/country', async (req, res) => {
+  console.log(req.body)
+  const result = await crantryCollection.insertOne(req.body)
+  console.log(result)
+  res.send(result)
+
+})
+//------get------
+app.get('/country', async (req, res) => {
+  const cursor = crantryCollection.find()
+  const result = await cursor.toArray();
+  res.send(result)
+})
+//-----get-----
+
+app.get('/country/:countryName', async (req,res)=>{
+  const country = req.params.countryName;
+  const query = {countryName:country}
+  const result = await crantryCollection.findOne(query);
+  res.send(result)
+})
+
+
+
+
+
+
+
+
+
    
     // Send a ping to confirm a successful connection
 
